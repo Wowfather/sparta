@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <title>스파르타코딩클럽 | 부트스트랩 연습하기</title>
+    <style>
+        .wrap {
+            width: 600px;
+            margin: 10px auto;
+        }
+
+        .wrap2 {
+            text-align: center;
+        }
+
+        .myPictureSize {
+            width: 400px;
+            height: 400px;
+        }
+
+        .smallFont {
+            font-size: 10pt
+        }
+        .middleFont {
+            font-size: 30pt
+        }
+        .space {
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        function hey() {
+            alert('주문이 완료되었습니다.')
+        }
+    </script>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="wrap2">
+        <img class="myPictureSize"
+            src="https://hips.hearstapps.com/vader-prod.s3.amazonaws.com/1560264058-667cab4c-f6ed-4d2a-9f0e-37dbb72ca837.jpg?crop=1xw:0.978xh;center,top&resize=480:*" />
+        </div>
+        <span class="middleFont">
+            양초를 팝니다
+        </span>
+        <span class="smallFont">
+            가격 : 3,000원/개
+        </span>
+        <p class="smallFont">
+            이 양초는 사실 특별한 힘을 가지고 있어요. 양초를 켜고 소원을 빌면 자자잔 뭐든지 이루지게 된답니다. 하나 사가세요! 대나무 향이 아주 좋아요
+        </p>
+
+        <div class="input-group space">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="">주문자 이름</span>
+            </div>
+            <input type="text" class="form-control">
+        </div>
+
+        <div class="input-group mb-3 space">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">수량</label>
+            </div>
+            <select class="custom-select" id="inputGroupSelect01">
+                <option selected>Choose...</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+            </select>
+        </div>
+
+        <div class="input-group space">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="">주소</span>
+            </div>
+            <input type="text" class="form-control">
+        </div>
+
+        <div class="input-group space">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="">전화번호</span>
+            </div>
+            <input type="text" class="form-control">
+        </div>
+        <div class="wrap2">
+            <button onclick="hey()" class="btn btn-primary" type="submit">주문하기</button>
+        </div>
+    </div>
+
+</body>
+
+</html>
