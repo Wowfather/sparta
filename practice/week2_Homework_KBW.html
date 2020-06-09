@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+​
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    ​
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    ​
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    ​
+    <title>스파르타코딩클럽 | 1주차 숙제</title>
+    ​ ​
+    <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+    <style type="text/css">
+        * {
+            font-family: 'Stylish', sans-serif;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        div.gap{
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .wrap {
+            width: 650px;
+            margin: auto;
+        }
+    </style>
+    ​ ​
+    <script>
+        function onclickButton() {
+            let nameOrder = $('#input-Username').val();
+            let numberOrder = $('#inputGroupSelect01').val();
+            let addressOrder = $('#input-Address').val();
+            let phoneOrder = $('#input-Mobile').val();
+            let tempPhone = phoneOrder.split('-');
+            if (nameOrder == '') {
+                alert('이름을 입력하세요!');
+            } else if (numberOrder == '--수량을 선택하세요--') {
+                alert('수량을 입력하세요');
+            } else if (addressOrder == '') {
+                alert('주소를 입력하세요');
+            } else if (phoneOrder == '') {
+                alert('연락처를 입력하세요');
+            } else if (tempPhone[0] != '010' || tempPhone[1].length != 4 || tempPhone[2].length != 4) {
+                alert('연락처는 010-0000-0000 형식으로 넣어주세요')
+            }
+            else {
+                alert('주문완료!')
+            }
+            isce
+        }
+        $(document).ready(function () {
+            $.ajax({
+                type: "GET",
+                url: "https://api.manana.kr/exchange/rate.json",
+                data: {},
+                success: function (response) {
+                    let rateCurrency = response[1]['rate']; 
+                    let temp_Currency = `달러-원 환율 : ${rateCurrency}`
+                    $("#input-currency").text(temp_Currency) 
+                }
+            });
+        });
+    </script>
+    ​
+</head>
+​
+
+<body>
+    <div class="wrap">
+        <div>
+            <img src="https://i.pinimg.com/originals/78/86/0d/78860d9b254c02f48213064659ad94b1.jpg">
+        </div>
+        ​<div>
+            <div style="width:200px; height:50px; float:left;">
+                <span style="color : gray; font-size:30px; font-weight: bold;">양초를 팝니다</span>
+            </div>
+
+            <div style="width:200px; height:50px; padding-top: 20px; float:left;">
+                <span style="color : coral; font-size: small;font-weight:bold;">가격 : 3,000원/개</span>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+        <div style="color: rgba(218, 80, 87, 0.9); font-weight: bolder;">
+            이 양초는 사실 특별한 힘을 가지고 있어요. <br>
+            양초를 켜고 소원을 빌면 짜자잔 뭐든지 이뤄지게 된답니다. 하나 사가세요! <br>
+            대나무 향이 아주 좋아요.
+        </div>
+        <div class="gap">
+        <span style="color : blue" id="input-currency"> </span>
+        ​</div>
+        <div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm">주문자 이름</span>
+                </div>
+                <input type="text" class="form-control" placeholder="Username" aria-label="Username"
+                    aria-describedby="basic-addon1" id="input-Username">
+            </div>
+            ​
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">수량</label>
+                </div>
+                <select class="custom-select" id="inputGroupSelect01">
+                    <option selected>--수량을 선택하세요--</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            ​
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm">주소</span>
+                </div>
+                <input type="text" class="form-control" placeholder="Address" aria-label="Username"
+                    aria-describedby="basic-addon1" id="input-Address">
+            </div>
+            ​
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm">전화번호</span>
+                </div>
+                <input type="text" class="form-control" placeholder="Mobile Number" aria-label="Username"
+                    aria-describedby="basic-addon1" id="input-Mobile">
+            </div>
+            <div style="text-align:center">
+                <button onclick="onclickButton()" type="button" class="btn btn-success">주문하기</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
