@@ -70,13 +70,13 @@
                             </div>
                             </div>
                             <footer class="card-footer">
-                            <a href="#" onclick="like_star('${name}')" class="card-footer-item has-text-info">
+                            <a href="#" onclick="like_star('${name}',this)" class="card-footer-item has-text-info">
                                 위로!
                                 <span class="icon">
                                 <i class="fas fa-thumbs-up"></i>
                                 </span>
                             </a>
-                            <a href="#" onclick="delete_star('${name}')" class="card-footer-item has-text-danger">
+                            <a href="#" onclick="delete_star('${name}',this)" class="card-footer-item has-text-danger">
                                 삭제
                                 <span class="icon">
                                 <i class="fas fa-ban"></i>
@@ -87,16 +87,14 @@
             $('#star-box').append(temp_html);
         }
 
-        function like_star(name) {
+        function like_star(name, e) {
             $.ajax({
                 type: 'POST',
                 url: '/api/like',
-                data: {name_give:name},
+                data: { name_give: name },
                 success: function (response) {
                     if (response['result'] == 'success') {
-                        let msg = response['msg'];
-                        alert(msg);
-                        window.location.reload()
+                        $(e).parent().parent().find('.star-name').text(`${name} (좋아요: ${response['new_like']})`);                
                     }
                 }
             });
@@ -106,12 +104,10 @@
             $.ajax({
                 type: 'POST',
                 url: '/api/delete',
-                data: {name_give:name},
+                data: { name_give: name },
                 success: function (response) {
                     if (response['result'] == 'success') {
-                        let msg = response['msg'];
-                        alert(msg);
-                        window.location.reload()
+                        $(this).parent().parent().remove();
                     }
                 }
             });
@@ -134,36 +130,7 @@
         </div>
     </section>
     <div class="star-list" id="star-box">
-        <div class="card">
-            <div class="card-content">
-                <div class="media">
-                    <div class="media-left">
-                        <figure class="image is-48x48">
-                            <img src="https://search.pstatic.net/common/?src=https%3A%2F%2Fssl.pstatic.net%2Fsstatic%2Fpeople%2Fportrait%2F201807%2F20180731143610623-6213324.jpg&type=u120_150&quality=95"
-                                alt="Placeholder image" />
-                        </figure>
-                    </div>
-                    <div class="media-content">
-                        <a href="#" target="_blank" class="star-name title is-4">김다미 (좋아요: 3)</a>
-                        <p class="subtitle is-6">안녕, 나의 소울메이트(가제)</p>
-                    </div>
-                </div>
-            </div>
-            <footer class="card-footer">
-                <a href="#" onclick="like_star('김다미')" class="card-footer-item has-text-info">
-                    위로!
-                    <span class="icon">
-                        <i class="fas fa-thumbs-up"></i>
-                    </span>
-                </a>
-                <a href="#" onclick="delete_star('김다미')" class="card-footer-item has-text-danger">
-                    삭제
-                    <span class="icon">
-                        <i class="fas fa-ban"></i>
-                    </span>
-                </a>
-            </footer>
-        </div>
+
     </div>
 </body>
 

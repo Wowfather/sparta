@@ -36,7 +36,7 @@ def star_like():
     # 4. mystar 목록에서 name이 name_receive인 문서의 like 를 new_like로 변경합니다.
     # 참고: '$set' 활용하기!
     # 5. 성공하면 success 메시지를 반환합니다.
-    return jsonify({'result': 'success', 'msg': '완료'})
+    return jsonify({'result': 'success', 'new_like': new_like})
 
 
 @app.route('/api/delete', methods=['POST'])

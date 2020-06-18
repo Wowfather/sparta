@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    ​
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    ​
+    <!-- Optional JavaScript -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" />
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+    <title>스타르타코팅클럽 마지막 프로젝트 - 나의 수익률 계산기</title>
+    ​
+    <style>
+        .make-center {
+            text-align: center;
+        }
+
+        .star-list {
+            width: 500px;
+            margin: 20px auto 0 auto;
+        }
+
+        .star-name {
+            display: inline-block;
+        }
+
+        .star-name:hover {
+            text-decoration: underline;
+        }
+
+        .card {
+            margin-bottom: 15px;
+        }
+
+        .wrap {
+            width: 1000px;
+            margin: auto;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            // index.html 로드가 완료되면 자동으로 load_myStock() 함수를 호출합니다.
+            load_myStock();
+            dateFind();
+        });
+
+        function load_myStock() {
+
+            $.ajax({
+                type: 'GET',
+                url: '/stock/list',
+                data: {},
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        let mystock = response['mystocks'];
+                        for (let i = 0; i < mystocks.length; i++) {
+                            make_tableTrading(mystocks[i]['dateTrading'], mystocks[i]['nameStock'], mystocks[i]['selectTrading'], mystocks[i]['selectNation'],
+                                mystocks[i]['rateCurrency'], mystocks[i]['nunStock'], mystocks[i]['priceStock'])
+                        }
+                    }
+                }
+            });
+        }
+
+        function dateFind() {
+            // 오늘날짜 구하기(YYYYMMDD)
+            let date = new Date();
+            let year = date.getFullYear();
+            let month = new String(date.getMonth() + 1);
+            let day = new String(date.getDate());
+
+            if (month.length == 1) {
+                month = "0" + month;
+            }
+            if (day.length == 1) {
+                day = "0" + day;
+            }
+
+            return $('#regDate').text(year + ". " + month + ". " + day);
+        }
+
+        function posting() {
+            // 읽기
+            let dateTrading = $('#input-dateTrading').val();
+            let nameStock = $('#input-nameStock').val();
+            let selectTrading = $('#input-selectTrading').val();
+            let selectNation = $('#input-selectNation').val();
+            let numStock = $('#input-numStock').val();
+            let priceStock = $('#input-priceStock').val();
+            let rateCurrency = $('#input-rateCurrency').val();
+
+            // 우리가 크롬 콘솔창에서 썼던 그 코드!
+            $.ajax({
+                type: "POST", // POST 방식으로 요청하겠다.
+                url: "/stock/list", // /memo라는 url에 요청하겠다.
+                data: {
+                    dateTrading_give: dateTrading, nameStock_give: nameStock, selectTrading_give: selectTrading
+                    , selectNation_give: selectNation, numStock_give: numStock, priceStock_give: priceStock, rateCurrency_give: rateCurrency
+                }, // 데이터를 주는 방법
+                success: function (response) { // 성공하면
+                    if (response['result'] == 'success') {
+                        //window.location.reload();
+                    } else {
+                        alert('서버 오류!')
+                    }
+                }
+            })
+        }
+
+        function make_tableTrading(dateTrading, nameStock, selectTrading, numStock, priceStock, rateCurrency) {
+            let feeStock = 0;
+            let taxTrading = 0;
+            let taxIncome = 0;
+            let totalAccount = 0;
+            let totalPriceStock = 0;
+
+            if (selectNation == "국내") {
+                totalPriceStock = numStock * priceStock;
+                feeStock = totalPriceStock * 0.00015;
+            }
+            else {
+                priceStock = priceStock * rateCurrency;
+                totalPriceStock = numStock * priceStock;
+                feeStock = totalPriceStock * 0.00025;
+            }
+
+            let temp_html = `<tr>
+                            <td>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="blankCheckbox" value="option1" aria-label="...">
+                                    </label>
+                                </div>
+                            </td>
+                            <th>${dateTrading}</th>
+                            <td>${nameStock}</td>
+                            <td>${selectTrading}</td>
+                            <td>${numStock}</td>
+                            <td>${priceStock}</td>
+                            <td>${rateCurrency}</td>
+                            <td>${totalPriceStock}</td>
+                            <td>${feeStock}</td>
+                            <td>${taxTrading}</td>
+                            <td>${taxIncome}</td>
+                            <td>${totalAccount}</td>
+                            </tr>`
+            $('#table-trading').append(temp_html);
+        }
+
+        function like_star(name, e) {
+            $.ajax({
+                type: 'POST',
+                url: '/stock/list',
+                data: { name_give: name },
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        $(e).parent().parent().find('.star-name').text(`${name} (좋아요: ${response['new_like']})`);
+                    }
+                }
+            });
+        }
+
+        function delete_stock(name) {
+            $.ajax({
+                type: 'POST',
+                url: '/api/delete',
+                data: { name_give: name },
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        $(this).parent().parent().remove();
+                    }
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="wrap">
+        <section class="hero is-warning">
+            <div class="hero-body">
+                <div class="container make-center">
+                    <h1 class="title">
+                        나의 수익률 계산기
+                    </h1>
+                    <h2 class="subtitle" id="regDate">
+                        Today Date
+                    </h2>
+                </div>
+            </div>
+        </section>
+        <br>
+        <form class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">거래일자</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="dateTrading" placeholder="YYYYMMDD">
+                </div>
+            </div>
+        </form>
+        <form class="form-horizontal">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">거래종목</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="nameStock" placeholder="예) 삼성전자">
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">매매종류</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="selectTrading" placeholder="매수/매도/배당 중 선택">
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">국내/해외</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="selectNation" placeholder="국내/해외 중 선택">
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">주문량</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="numStock" placeholder="OOO">
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-2 control-label" for="formGroupInputSmall">주문량</label>
+                <div class="col-sm-4">
+                    <input class="form-control" type="text" id="priceStock" placeholder="원 또는 달러">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-default" onclick="posting()">등록</button>
+        </form>
+        <br>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">매매일지</li>
+            </ol>
+        </nav>
+
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">선택</th>
+                    <th scope="col">#</th>
+                    <th scope="col">일자</th>
+                    <th scope="col">종목</th>
+                    <th scope="col">주문구분</th>
+                    <th scope="col">체결가</th>
+                    <th scope="col">환율</th>
+                    <th scope="col">주문금액</th>
+                    <th scope="col">수수료</th>
+                    <th scope="col">거래세</th>
+                    <th scope="col">소득세</th>
+                    <th scope="col">종합</th>
+                </tr>
+                
+            </thead>
+            <tbody id="table-trading">
+
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
