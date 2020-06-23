@@ -55,10 +55,13 @@
             margin: auto;
         }
     </style>
+
+
     <script>
         $(document).ready(function () {
             // index.html 로드가 완료되면 자동으로 load_myStock() 함수를 호출합니다.
             load_myStock();
+            load_myStock1();
             dateFind();
         });
 
@@ -69,16 +72,70 @@
                 url: '/stock/list',
                 data: {},
                 success: function (response) {
+                    response = JSON.parse(response)
                     if (response['result'] == 'success') {
-                        let mystock = response['mystocks'];
+                        let mystocks = response['stocks'];
                         for (let i = 0; i < mystocks.length; i++) {
-                            make_tableTrading(mystocks[i]['dateTrading'], mystocks[i]['nameStock'], mystocks[i]['selectTrading'], mystocks[i]['selectNation'],
-                                mystocks[i]['rateCurrency'], mystocks[i]['nunStock'], mystocks[i]['priceStock'])
+                            make_tableTrading(mystocks[i]['_id']['$oid'], mystocks[i]['dateTrading'], mystocks[i]['nameStock'], mystocks[i]['selectTrading'], mystocks[i]['selectNation'],
+                                mystocks[i]['numStock'], mystocks[i]['priceStock'], mystocks[i]['rateCurrency']);
+                        }
+                    }
+                }
+            });
+
+        }
+
+        function load_myStock1() {
+            $.ajax({
+                type: 'GET',
+                url: '/stock/nameStock',
+                data: {},
+                success: function (response) {
+                    response = JSON.parse(response)
+                    if (response['result'] == 'success') {
+                        let mystocks1 = response['stocks'];
+                        for (let i = 0; i < mystocks1.length; i++) {
+                            console.log(mystocks1[i]['nameStock'])
                         }
                     }
                 }
             });
         }
+
+
+        function applyName() {
+            $.ajax({
+                type: 'GET',
+                url: '/stock/list',
+                data: {},
+                success: function (response) {
+                    response = JSON.parse(response)
+                    let temp_numStock = 0;
+                    let temp_priceStock = 0;
+                    let temp_priceStock_total = 0;
+                    let priceStock_total = 0;
+                    let numStock_total = 0;
+                    let priceStock_avg = 0;
+                    if (response['result'] == 'success') {
+                        let mystocks = response['stocks'];
+                        let nameStock_select = $('#input-stockselect').val();
+                        for (let i = 0; i < mystocks.length; i++) {
+                            if (mystocks[i]['nameStock'] == nameStock_select) {
+                                temp_numStock = mystocks[i]['numStock'] * 1;
+                                temp_priceStock = mystocks[i]['priceStock'] * 1;
+                                temp_priceStock_total = temp_numStock * temp_priceStock;
+                                priceStock_total += temp_priceStock_total;
+                                numStock_total += temp_numStock;
+                            }
+                        }
+                        priceStock_avg = priceStock_total / numStock_total;
+                        priceStock_avg = priceStock_avg.toFixed(0);
+                        make_tableName(nameStock_select, numStock_total, priceStock_avg);
+                    }
+                }
+            });
+        }
+
 
         function dateFind() {
             // 오늘날짜 구하기(YYYYMMDD)
@@ -97,6 +154,64 @@
             return $('#regDate').text(year + ". " + month + ". " + day);
         }
 
+        function make_tableTrading(id, dateTrading, nameStock, selectTrading, selectNation, numStock, priceStock, rateCurrency) {
+
+            let feeStock = 0;
+            let taxTrading = 0;
+            let taxIncome = 0;
+            let totalAccount = 0;
+            let totalPriceStock = 0;
+
+            if (selectNation == "국내") {
+                rateCurrency = 1;
+                totalPriceStock = numStock * priceStock;
+                feeStock = totalPriceStock * 0.00015;
+                feeStock = feeStock.toFixed(0);
+            }
+            else {
+                priceStock = priceStock * rateCurrency;
+                totalPriceStock = numStock * priceStock;
+                feeStock = totalPriceStock * 0.00025;
+            }
+
+            let temp_html = `<tr>
+                            <td>
+                                <button onclick="delete_stock('${id}')">삭제</button>
+                            </td>
+                            <td>${dateTrading}</td>
+                            <td>${nameStock}</td>
+                            <td>${selectTrading}</td>
+                            <td>${numStock}</td>
+                            <td>${priceStock}</td>
+                            <td>${rateCurrency}</td>
+                            <td>${totalPriceStock}</td>
+                            <td>${feeStock}</td>
+                            <td>${taxTrading}</td>
+                            <td>${taxIncome}</td>
+                            <td>${totalAccount}</td>
+                            </tr>`
+            $('#table-trading').append(temp_html);
+
+        }
+
+        function make_tableName(nameStock_selecting, temp_numStock, priceStock_avg) {
+
+            let totalPriceStock = temp_numStock * priceStock_avg
+            let pricenow = priceStock_avg
+            let totalPriceStock_now = temp_numStock * pricenow
+            let ROE_now = ((totalPriceStock_now - totalPriceStock)/totalPriceStock)*100
+            let temp_html1 = `<tr>
+                <td>${nameStock_selecting}</td>
+                <td>${temp_numStock}</td>
+                <td>${priceStock_avg}</td>
+                <td>${pricenow}</td>
+                <td>${totalPriceStock}</td>
+                <td>${totalPriceStock_now}</td>
+                <td>${ROE_now}</td>
+                </tr>`
+            $('#table-mystocks').append(temp_html1)
+
+        }
         function posting() {
             // 읽기
             let dateTrading = $('#input-dateTrading').val();
@@ -117,7 +232,7 @@
                 }, // 데이터를 주는 방법
                 success: function (response) { // 성공하면
                     if (response['result'] == 'success') {
-                        //window.location.reload();
+                        window.location.reload();
                     } else {
                         alert('서버 오류!')
                     }
@@ -125,64 +240,11 @@
             })
         }
 
-        function make_tableTrading(dateTrading, nameStock, selectTrading, numStock, priceStock, rateCurrency) {
-            let feeStock = 0;
-            let taxTrading = 0;
-            let taxIncome = 0;
-            let totalAccount = 0;
-            let totalPriceStock = 0;
-
-            if (selectNation == "국내") {
-                totalPriceStock = numStock * priceStock;
-                feeStock = totalPriceStock * 0.00015;
-            }
-            else {
-                priceStock = priceStock * rateCurrency;
-                totalPriceStock = numStock * priceStock;
-                feeStock = totalPriceStock * 0.00025;
-            }
-
-            let temp_html = `<tr>
-                            <td>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" id="blankCheckbox" value="option1" aria-label="...">
-                                    </label>
-                                </div>
-                            </td>
-                            <th>${dateTrading}</th>
-                            <td>${nameStock}</td>
-                            <td>${selectTrading}</td>
-                            <td>${numStock}</td>
-                            <td>${priceStock}</td>
-                            <td>${rateCurrency}</td>
-                            <td>${totalPriceStock}</td>
-                            <td>${feeStock}</td>
-                            <td>${taxTrading}</td>
-                            <td>${taxIncome}</td>
-                            <td>${totalAccount}</td>
-                            </tr>`
-            $('#table-trading').append(temp_html);
-        }
-
-        function like_star(name, e) {
+        function delete_stock(id) {
             $.ajax({
                 type: 'POST',
-                url: '/stock/list',
-                data: { name_give: name },
-                success: function (response) {
-                    if (response['result'] == 'success') {
-                        $(e).parent().parent().find('.star-name').text(`${name} (좋아요: ${response['new_like']})`);
-                    }
-                }
-            });
-        }
-
-        function delete_stock(name) {
-            $.ajax({
-                type: 'POST',
-                url: '/api/delete',
-                data: { name_give: name },
+                url: '/stock/delete',
+                data: { id_give: id },
                 success: function (response) {
                     if (response['result'] == 'success') {
                         $(this).parent().parent().remove();
@@ -190,8 +252,203 @@
                 }
             });
         }
+    </script>
+
+    <!--    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', { packages: ['corechart', 'line'] });
+        google.charts.setOnLoadCallback(drawCurveTypes);
+
+        function drawCurveTypes() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('number', 'X');
+            data.addColumn('number', '삼성전자');
+            data.addColumn('number', 'Google');
+
+            data.addRows([
+                [0, 0, 0], [1, 10, 5], [2, 23, 15], [3, 17, 9], [4, 18, 10], [5, 9, 5],
+                [6, 11, 3], [7, 27, 19], [8, 33, 25], [9, 40, 32], [10, 32, 24], [11, 35, 27],
+                [12, 30, 22], [13, 40, 32], [14, 42, 34], [15, 47, 39], [16, 44, 36], [17, 48, 40],
+                [18, 52, 44], [19, 54, 46], [20, 42, 34], [21, 55, 47], [22, 56, 48], [23, 57, 49],
+                [24, 60, 52], [25, 50, 42], [26, 52, 44], [27, 51, 43], [28, 49, 41], [29, 53, 45],
+                [30, 55, 47], [31, 60, 52], [32, 61, 53], [33, 59, 51], [34, 62, 54], [35, 65, 57],
+                [36, 62, 54], [37, 58, 50], [38, 55, 47], [39, 61, 53], [40, 64, 56], [41, 65, 57],
+                [42, 63, 55], [43, 66, 58], [44, 67, 59], [45, 69, 61], [46, 69, 61], [47, 70, 62],
+                [48, 72, 64], [49, 68, 60], [50, 66, 58], [51, 65, 57], [52, 67, 59], [53, 70, 62],
+                [54, 71, 63], [55, 72, 64], [56, 73, 65], [57, 75, 67], [58, 70, 62], [59, 68, 60],
+                [60, 64, 56], [61, 60, 52], [62, 65, 57], [63, 67, 59], [64, 68, 60], [65, 69, 61],
+                [66, 70, 62], [67, 72, 64], [68, 75, 67], [69, 80, 72]
+            ]);
+
+            var options = {
+                hAxis: {
+                    title: 'Time'
+                },
+                vAxis: {
+                    title: 'Popularity'
+                },
+                series: {
+                    1: { curveType: 'function' }
+                }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+    </script>
+ -->
+
+    <script>
+
+        var chartDrowFun = {
+
+            chartDrow: function () {
+                var chartData = '';
+
+                //날짜형식 변경하고 싶으시면 이 부분 수정하세요.
+                var chartDateformat = 'yyyy년MM월dd일';
+                //라인차트의 라인 수
+                var chartLineCount = 10;
+                //컨트롤러 바 차트의 라인 수
+                var controlLineCount = 10;
+
+
+                function drawDashboard() {
+
+                    var data = new google.visualization.DataTable();
+                    //그래프에 표시할 컬럼 추가
+                    data.addColumn('datetime', '날짜');
+                    data.addColumn('number', '삼성전자');
+                    data.addColumn('number', 'Google');
+                    data.addColumn('number', '카카오');
+
+                    //그래프에 표시할 데이터
+                    var dataRow = [];
+
+                    for (var i = 0; i <= 500; i++) { //랜덤 데이터 생성
+                        var total = Math.floor(Math.random() * 300) + 1;
+                        var man = Math.floor(Math.random() * total) + 1;
+                        var woman = total - man;
+
+                        dataRow = [new Date('2020', '01', i, '06'), man, woman, total];
+                        data.addRow(dataRow);
+                    }
+
+
+                    var chart = new google.visualization.ChartWrapper({
+                        chartType: 'LineChart',
+                        containerId: 'lineChartArea', //라인 차트 생성할 영역
+                        options: {
+                            isStacked: 'percent',
+                            focusTarget: 'category',
+                            height: 500,
+                            width: '100%',
+                            legend: { position: "top", textStyle: { fontSize: 13 } },
+                            pointSize: 5,
+                            tooltip: { textStyle: { fontSize: 12 }, showColorCode: true, trigger: 'both' },
+                            hAxis: {
+                                format: chartDateformat, gridlines: {
+                                    count: chartLineCount, units: {
+                                        years: { format: ['yyyy년'] },
+                                        months: { format: ['MM월'] },
+                                        days: { format: ['dd일'] },
+                                        hours: { format: ['HH시'] }
+                                    }
+                                }, textStyle: { fontSize: 12 }
+                            },
+                            vAxis: { minValue: 100, viewWindow: { min: 0 }, gridlines: { count: -1 }, textStyle: { fontSize: 12 } },
+                            animation: { startup: true, duration: 1000, easing: 'in' },
+                            annotations: {
+                                pattern: chartDateformat,
+                                textStyle: {
+                                    fontSize: 15,
+                                    bold: true,
+                                    italic: true,
+                                    color: '#871b47',
+                                    auraColor: '#d799ae',
+                                    opacity: 0.8,
+                                    pattern: chartDateformat
+                                }
+                            }
+                        }
+                    });
+
+                    var control = new google.visualization.ControlWrapper({
+                        controlType: 'ChartRangeFilter',
+                        containerId: 'controlsArea',  //control bar를 생성할 영역
+                        options: {
+                            ui: {
+                                chartType: 'LineChart',
+                                chartOptions: {
+                                    chartArea: { 'width': '60%', 'height': 80 },
+                                    hAxis: {
+                                        'baselineColor': 'none', format: chartDateformat, textStyle: { fontSize: 12 },
+                                        gridlines: {
+                                            count: controlLineCount, units: {
+                                                years: { format: ['yyyy년'] },
+                                                months: { format: ['MM월'] },
+                                                days: { format: ['dd일'] },
+                                                hours: { format: ['HH시'] }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            filterColumnIndex: 0
+                        }
+                    });
+
+                    var date_formatter = new google.visualization.DateFormat({ pattern: chartDateformat });
+                    date_formatter.format(data, 0);
+
+                    var dashboard = new google.visualization.Dashboard(document.getElementById('Line_Controls_Chart'));
+                    window.addEventListener('resize', function () { dashboard.draw(data); }, false); //화면 크기에 따라 그래프 크기 변경
+                    dashboard.bind([control], [chart]);
+                    dashboard.draw(data);
+
+                }
+                google.charts.setOnLoadCallback(drawDashboard);
+
+            }
+        }
+
+        $(document).ready(function () {
+            google.charts.load('current', { 'packages': ['line', 'controls'] });
+            chartDrowFun.chartDrow(); //chartDrow() 실행
+        });
+
 
     </script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Director (Year)', 'Rotten Tomatoes', 'IMDB'],
+                ['Alfred Hitchcock (1935)', 8.4, 7.9],
+                ['Ralph Thomas (1959)', 6.9, 6.5],
+                ['Don Sharp (1978)', 6.5, 6.4],
+                ['James Hawes (2008)', 4.4, 6.2]
+            ]);
+
+            var options = {
+                title: 'The decline of \'The 39 Steps\'',
+                vAxis: { title: 'Accumulated Rating' },
+                isStacked: true
+            };
+
+            var chart = new google.visualization.SteppedAreaChart(document.getElementById('chart_div2'));
+
+            chart.draw(data, options);
+        }
+    </script>
+
+
+
+
 </head>
 
 <body>
@@ -209,47 +466,70 @@
             </div>
         </section>
         <br>
-        <form class="form-horizontal">
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">거래일자</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="dateTrading" placeholder="YYYYMMDD">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">거래일자</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-dateTrading" placeholder="YYYYMMDD">
                 </div>
             </div>
-        </form>
-        <form class="form-horizontal">
+        </div>
+        <br>
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">거래종목</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="nameStock" placeholder="예) 삼성전자">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">거래종목</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-nameStock" placeholder="예) 삼성전자">
                 </div>
             </div>
+        </div>
+        <br>
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">매매종류</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="selectTrading" placeholder="매수/매도/배당 중 선택">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">매매종류</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-selectTrading" placeholder="매수/매도/배당 중 선택">
                 </div>
             </div>
+        </div>
+        <br>
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">국내/해외</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="selectNation" placeholder="국내/해외 중 선택">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">국내/해외</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-selectNation" placeholder="국내/해외 중 선택">
                 </div>
             </div>
+        </div>
+        <br>
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">주문량</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="numStock" placeholder="OOO">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">환율</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-rateCurrency" placeholder="달러일 경우만 반영">
                 </div>
             </div>
+        </div>
+        <br>
+        <div class="form-inline">
             <div class="form-group form-group-sm">
-                <label class="col-sm-2 control-label" for="formGroupInputSmall">주문량</label>
-                <div class="col-sm-4">
-                    <input class="form-control" type="text" id="priceStock" placeholder="원 또는 달러">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">주문량</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-numStock" placeholder="OOO">
                 </div>
             </div>
-            <button type="submit" class="btn btn-default" onclick="posting()">등록</button>
-        </form>
+        </div>
+        <br>
+        <div class="form-inline">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">체결가</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-priceStock" placeholder="원 또는 달러">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-default" onclick="posting()">등록</button>
+        <br>
         <br>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -260,11 +540,11 @@
         <table class="table">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">선택</th>
-                    <th scope="col">#</th>
+                    <th scope="col">삭제</th>
                     <th scope="col">일자</th>
                     <th scope="col">종목</th>
                     <th scope="col">주문구분</th>
+                    <th scope="col">주문량</th>
                     <th scope="col">체결가</th>
                     <th scope="col">환율</th>
                     <th scope="col">주문금액</th>
@@ -273,12 +553,72 @@
                     <th scope="col">소득세</th>
                     <th scope="col">종합</th>
                 </tr>
-                
+
             </thead>
             <tbody id="table-trading">
-
             </tbody>
         </table>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">현재 보유 종목별 수익률</li>
+            </ol>
+        </nav>
+        <div class="form-inline">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-5 control-label" for="formGroupInputSmall">종목선택</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="input-stockselect" placeholder="종목명 입력">
+                </div>
+            </div>
+        </div>
+        <br>
+        <button type="submit" class="btn btn-default" onclick="applyName()">적용</button>
+        <br>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">종목명</th>
+                    <th scope="col">보유수량</th>
+                    <th scope="col">매입가</th>
+                    <th scope="col">현재가</th>
+                    <th scope="col">투자금액</th>
+                    <th scope="col">평가금액</th>
+                    <th scope="col">수익률(%)</th>
+                </tr>
+
+            </thead>
+            <tbody id="table-mystocks">
+            </tbody>
+        </table>
+
+        <!-- <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">종목별 가격 그래프</li>
+            </ol>
+        </nav>
+        <div id="chart_div" style="height: 500px;"></div> -->
+
+        <br>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">종목별 가격 그래프</li>
+            </ol>
+        </nav>
+        <div id="Line_Controls_Chart">
+            <!-- 라인 차트 생성할 영역 -->
+            <div id="lineChartArea" style="padding:0px 20px 0px 0px;"></div>
+            <!-- 컨트롤바를 생성할 영역 -->
+            <div id="controlsArea" style="padding:0px 20px 0px 0px;"></div>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">총자산 그래프</li>
+            </ol>
+        </nav>
+        <div id="chart_div2" style="height: 500px;"></div>
+
+
     </div>
 </body>
 
