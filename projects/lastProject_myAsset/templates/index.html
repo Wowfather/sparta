@@ -54,6 +54,10 @@
             width: 1000px;
             margin: auto;
         }
+
+        td {
+            text-align: center;
+        }
     </style>
 
 
@@ -61,12 +65,11 @@
         $(document).ready(function () {
             // index.html 로드가 완료되면 자동으로 load_myStock() 함수를 호출합니다.
             load_myStock();
-            load_myStock1();
+            //load_myStock1();
             dateFind();
         });
 
         function load_myStock() {
-
             $.ajax({
                 type: 'GET',
                 url: '/stock/list',
@@ -76,32 +79,20 @@
                     if (response['result'] == 'success') {
                         let mystocks = response['stocks'];
                         for (let i = 0; i < mystocks.length; i++) {
-                            make_tableTrading(mystocks[i]['_id']['$oid'], mystocks[i]['dateTrading'], mystocks[i]['nameStock'], mystocks[i]['selectTrading'], mystocks[i]['selectNation'],
-                                mystocks[i]['numStock'], mystocks[i]['priceStock'], mystocks[i]['rateCurrency']);
+                            make_tableTrading(mystocks[i]['_id']['$oid'],
+                                mystocks[i]['dateTrading'],
+                                mystocks[i]['nameStock'],
+                                mystocks[i]['selectTrading'],
+                                mystocks[i]['selectNation'],
+                                mystocks[i]['numStock'] * 1,
+                                mystocks[i]['priceStock'] * 1,
+                                mystocks[i]['rateCurrency'] * 1);
                         }
                     }
                 }
             });
 
         }
-
-        function load_myStock1() {
-            $.ajax({
-                type: 'GET',
-                url: '/stock/nameStock',
-                data: {},
-                success: function (response) {
-                    response = JSON.parse(response)
-                    if (response['result'] == 'success') {
-                        let mystocks1 = response['stocks'];
-                        for (let i = 0; i < mystocks1.length; i++) {
-                            console.log(mystocks1[i]['nameStock'])
-                        }
-                    }
-                }
-            });
-        }
-
 
         function applyName() {
             $.ajax({
@@ -131,11 +122,11 @@
                         priceStock_avg = priceStock_total / numStock_total;
                         priceStock_avg = priceStock_avg.toFixed(0);
                         make_tableName(nameStock_select, numStock_total, priceStock_avg);
+                        load_myStock1();
                     }
                 }
             });
         }
-
 
         function dateFind() {
             // 오늘날짜 구하기(YYYYMMDD)
@@ -166,48 +157,50 @@
                 rateCurrency = 1;
                 totalPriceStock = numStock * priceStock;
                 feeStock = totalPriceStock * 0.00015;
-                feeStock = feeStock.toFixed(0);
+                feeStock = Math.floor(feeStock);
             }
             else {
                 priceStock = priceStock * rateCurrency;
                 totalPriceStock = numStock * priceStock;
-                feeStock = totalPriceStock * 0.00025;
+                feeStock = totalPriceStock * 0.00025
+                feeStock = Math.floor(feeStock);
             }
 
             let temp_html = `<tr>
-                            <td>
+                            <td align=center>
                                 <button onclick="delete_stock('${id}')">삭제</button>
                             </td>
-                            <td>${dateTrading}</td>
-                            <td>${nameStock}</td>
-                            <td>${selectTrading}</td>
-                            <td>${numStock}</td>
-                            <td>${priceStock}</td>
-                            <td>${rateCurrency}</td>
-                            <td>${totalPriceStock}</td>
-                            <td>${feeStock}</td>
-                            <td>${taxTrading}</td>
-                            <td>${taxIncome}</td>
-                            <td>${totalAccount}</td>
+                            <td align=center>${dateTrading}</td>
+                            <td align=center>${nameStock}</td>
+                            <td align=center>${selectTrading}</td>
+                            <td align=center>${numStock.toLocaleString()}</td>
+                            <td align=center>${priceStock.toLocaleString()}</td>
+                            <td align=center>${rateCurrency.toLocaleString()}</td>
+                            <td align=center>${totalPriceStock.toLocaleString()}</td>
+                            <td align=center>${feeStock.toLocaleString()}</td>
+                            <td align=center>${taxTrading.toLocaleString()}</td>
+                            <td align=center>${taxIncome.toLocaleString()}</td>
+                            <td align=center>${totalAccount.toLocaleString()}</td>
                             </tr>`
+            console.log(typeof feeStock);
             $('#table-trading').append(temp_html);
 
         }
 
         function make_tableName(nameStock_selecting, temp_numStock, priceStock_avg) {
 
-            let totalPriceStock = temp_numStock * priceStock_avg
-            let pricenow = priceStock_avg
-            let totalPriceStock_now = temp_numStock * pricenow
-            let ROE_now = ((totalPriceStock_now - totalPriceStock)/totalPriceStock)*100
+            let totalPriceStock = temp_numStock * priceStock_avg;
+            let pricenow = priceStock_avg - 1000;
+            let totalPriceStock_now = temp_numStock * pricenow;
+            let ROE_now = ((totalPriceStock_now - totalPriceStock) / totalPriceStock) * 100;
             let temp_html1 = `<tr>
                 <td>${nameStock_selecting}</td>
-                <td>${temp_numStock}</td>
-                <td>${priceStock_avg}</td>
-                <td>${pricenow}</td>
-                <td>${totalPriceStock}</td>
-                <td>${totalPriceStock_now}</td>
-                <td>${ROE_now}</td>
+                <td>${temp_numStock.toLocaleString()}</td>
+                <td>${priceStock_avg.toLocaleString()}</td>
+                <td>${pricenow.toLocaleString()}</td>
+                <td>${totalPriceStock.toLocaleString()}</td>
+                <td>${totalPriceStock_now.toLocaleString()}</td>
+                <td>${ROE_now.toFixed(1)}</td>
                 </tr>`
             $('#table-mystocks').append(temp_html1)
 
@@ -254,51 +247,23 @@
         }
     </script>
 
-    <!--    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-        google.charts.load('current', { packages: ['corechart', 'line'] });
-        google.charts.setOnLoadCallback(drawCurveTypes);
-
-        function drawCurveTypes() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('number', 'X');
-            data.addColumn('number', '삼성전자');
-            data.addColumn('number', 'Google');
-
-            data.addRows([
-                [0, 0, 0], [1, 10, 5], [2, 23, 15], [3, 17, 9], [4, 18, 10], [5, 9, 5],
-                [6, 11, 3], [7, 27, 19], [8, 33, 25], [9, 40, 32], [10, 32, 24], [11, 35, 27],
-                [12, 30, 22], [13, 40, 32], [14, 42, 34], [15, 47, 39], [16, 44, 36], [17, 48, 40],
-                [18, 52, 44], [19, 54, 46], [20, 42, 34], [21, 55, 47], [22, 56, 48], [23, 57, 49],
-                [24, 60, 52], [25, 50, 42], [26, 52, 44], [27, 51, 43], [28, 49, 41], [29, 53, 45],
-                [30, 55, 47], [31, 60, 52], [32, 61, 53], [33, 59, 51], [34, 62, 54], [35, 65, 57],
-                [36, 62, 54], [37, 58, 50], [38, 55, 47], [39, 61, 53], [40, 64, 56], [41, 65, 57],
-                [42, 63, 55], [43, 66, 58], [44, 67, 59], [45, 69, 61], [46, 69, 61], [47, 70, 62],
-                [48, 72, 64], [49, 68, 60], [50, 66, 58], [51, 65, 57], [52, 67, 59], [53, 70, 62],
-                [54, 71, 63], [55, 72, 64], [56, 73, 65], [57, 75, 67], [58, 70, 62], [59, 68, 60],
-                [60, 64, 56], [61, 60, 52], [62, 65, 57], [63, 67, 59], [64, 68, 60], [65, 69, 61],
-                [66, 70, 62], [67, 72, 64], [68, 75, 67], [69, 80, 72]
-            ]);
-
-            var options = {
-                hAxis: {
-                    title: 'Time'
-                },
-                vAxis: {
-                    title: 'Popularity'
-                },
-                series: {
-                    1: { curveType: 'function' }
-                }
-            };
-
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
-        }
-    </script>
- -->
-
     <script>
+        function load_myStock1() {
+            let nameStock = $('#input-nameStock').val();
+            $.ajax({
+                type: 'GET',
+                url: '/stock/nameStock',
+                data: { },
+                success: function (response) {
+                    response = JSON.parse(response)
+                    if (response['result'] == 'success') {
+                        let mystocks1 = response['priceSelectedStock'];
+                        console.log(mystocks1);
+                    }
+                }
+            });
+        }
+
 
         var chartDrowFun = {
 
