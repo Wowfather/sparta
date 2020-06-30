@@ -76,6 +76,7 @@
         $(document).ready(function () {
             // index.html 로드가 완료되면 자동으로 load_myStock() 함수를 호출합니다.
             load_myStock();
+            load_myStock2();
             //load_myStock1();
             dateFind();
         });
@@ -219,7 +220,6 @@
                             <td align=center>${taxIncome.toLocaleString()}</td>
                             <td align=center>${totalAccount.toLocaleString()}</td>
                             </tr>`
-            console.log(typeof numStock);
             $('#table-trading').append(temp_html);
 
         }
@@ -241,7 +241,6 @@
                 </tr>`
             $('#table-mystocks').empty();
             $('#table-mystocks').append(temp_html1);
-
         }
         function posting() {
             // 읽기
@@ -311,9 +310,21 @@
                 url: '/stock/assetAppend',
                 data: {},
                 success: function (response) {
+                    let date = [];
+                    let myAssets = [];
+                    let assetSum = [];
                     if (response['result'] == 'success') {
-                        let myAsset = response['myAsset'];
-                        drawChart(myAsset['date'], myAsset['myAsset'], myAsset['assetSum']);
+                        let tempAsset = response['myAsset'];
+                        for (i = 0; i <= tempAsset.length; i++) {
+                            //console.log(tempAsset[0]['date']);
+                            date.push(tempAsset[i]['date']);
+                            console.log(date);
+                            myAssets.push(tempAsset[i]['myAsset']);
+                            console.log(myAssets);
+                            assetSum.push(tempAsset[i]['assetSum']);
+                            console.log(assetSum);
+                        }
+                        drawChart(date, myAssets, assetSum);
                     }
                 }
             });
@@ -436,8 +447,8 @@
     <script type="text/javascript">
         google.charts.load('current', { 'packages': ['corechart'] });
         google.charts.setOnLoadCallback(drawChart);
-        s
         function drawChart(x, y, z) {
+            console.log(x);
             var dataRow = [];
 
             for (var i = 0; i <= x.length; i++) { //랜덤 데이터 생성

@@ -36,7 +36,6 @@ def home():
 @app.route('/stock/list', methods=['GET'])
 def stock_list():
     result = list(db.stocks.find({}))
-    print(result)
     return dumps({'result': 'success', 'stocks': result})
 
 # @app.route('/stock/nameStock', methods=['GET'])
@@ -108,36 +107,11 @@ def callprice_stock():
     y = list(df.Close)
     return jsonify({'result': 'success', 'x': x, 'y': y})
 
-def dayAssetSaving():
-    dt = datetime.datetime.now()
-    results = list(db.stocks.find({}))
-    total = 0
-    myAsset = 200000000
-    for result in results:
-        if result['selectTrading'] == '매수' or result['selectTrading'] == '배당':
-            if result['selectNation'] == '국내':
-                price = int(result['priceStock'])
-                num = int(result['numStock'])
-                total += price * num 
-            else :
-                price = int(result['priceStock'])
-                num = int(result['numStock'])
-                rate = int(result['rateCurrency'])
-                total += price * num * rate            
-    print(total)
-    asset = {
-        'date' : dt,
-        'assetSum': total,
-        'myAsset' : myAsset,
-    }
-    db.assetSum.insert_one(asset)
-
 @app.route('/stock/assetAppend', methods=['GET'])
 def assetAppend():
-    results = list(db.assetSum.find({}))
-    return jsonify({'result': 'success', 'myAsset' : result})
-
-dayAssetSaving()    
+    results = list(db.assetSum.find({},{'_id':0}))
+    print(results)
+    return jsonify({'result': 'success', 'myAsset' : results})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
