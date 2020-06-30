@@ -8,9 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     ​
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    ​
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
     <!-- Optional JavaScript -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" />
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
@@ -25,6 +27,10 @@
         crossorigin="anonymous"></script>
 
     <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+    <meta property="og:title" content="내 사이트의 제목" />
+    <meta property="og:description" content="보고 있는 페이지의 내용 요약" />
+    <meta property="og:image" content="{{ url_for('static', filename='ogimage.png') }}" />
 
     <title>스타르타코팅클럽 마지막 프로젝트 - 나의 수익률 계산기</title>
     ​
@@ -51,12 +57,17 @@
         }
 
         .wrap {
-            width: 1000px;
+            width: 1200px;
             margin: auto;
         }
 
         td {
             text-align: center;
+        }
+
+        section {
+            background-image: url("https://www.jt-corp.co.jp/kr/ir/jstock/images/mainimg_sp.jpg");
+            background-repeat: repeat-x;
         }
     </style>
 
@@ -105,23 +116,37 @@
                     let temp_priceStock = 0;
                     let temp_priceStock_total = 0;
                     let priceStock_total = 0;
-                    let numStock_total = 0;
-                    let priceStock_avg = 0;
+                    numStock_total = 0;
+                    priceStock_avg = 0;
                     if (response['result'] == 'success') {
                         let mystocks = response['stocks'];
-                        let nameStock_select = $('#input-stockselect').val();
+                        nameStock_select = $('#input-stockselect').val();
                         for (let i = 0; i < mystocks.length; i++) {
                             if (mystocks[i]['nameStock'] == nameStock_select) {
-                                temp_numStock = mystocks[i]['numStock'] * 1;
-                                temp_priceStock = mystocks[i]['priceStock'] * 1;
-                                temp_priceStock_total = temp_numStock * temp_priceStock;
-                                priceStock_total += temp_priceStock_total;
-                                numStock_total += temp_numStock;
+                                if (mystocks[i]['selectTrading'] == '매수') {
+                                    temp_numStock = mystocks[i]['numStock'] * 1;
+                                    temp_priceStock = mystocks[i]['priceStock'] * 1;
+                                    temp_priceStock_total = temp_numStock * temp_priceStock;
+                                    priceStock_total += temp_priceStock_total * 1;
+                                    numStock_total += temp_numStock * 1;
+                                }
+                                else if (mystocks[i]['selectTrading'] == '매도') {
+                                    temp_numStock = mystocks[i]['numStock'] * 1;
+                                    temp_priceStock = mystocks[i]['priceStock'] * 1;
+                                    temp_priceStock_total = temp_numStock * temp_priceStock;
+                                    priceStock_total -= temp_priceStock_total * 1;
+                                    numStock_total -= temp_numStock * 1;
+                                }
+                                else {
+                                    temp_numStock = mystocks[i]['numStock'] * 1;
+                                    temp_priceStock = mystocks[i]['priceStock'] * 1;
+                                    temp_priceStock_total = temp_numStock * temp_priceStock;
+                                    priceStock_total += temp_priceStock_total * 1;
+                                }
                             }
                         }
                         priceStock_avg = priceStock_total / numStock_total;
-                        priceStock_avg = priceStock_avg.toFixed(0);
-                        make_tableName(nameStock_select, numStock_total, priceStock_avg);
+                        priceStock_avg = parseInt(priceStock_avg);
                         load_myStock1();
                     }
                 }
@@ -154,16 +179,28 @@
             let totalPriceStock = 0;
 
             if (selectNation == "국내") {
-                rateCurrency = 1;
-                totalPriceStock = numStock * priceStock;
-                feeStock = totalPriceStock * 0.00015;
-                feeStock = Math.floor(feeStock);
+                if (selectTrading == '배당') {
+                    rateCurrency = 1;
+                    totalPriceStock = numStock * priceStock;
+                    taxIncome = totalPriceStock * 0.154;
+                    taxIncome = Math.floor(taxIncome);
+                    totalAccount = totalPriceStock - taxIncome;
+                } else {
+                    rateCurrency = 1;
+                    totalPriceStock = numStock * priceStock;
+                    feeStock = totalPriceStock * 0.00015;
+                    feeStock = Math.floor(feeStock);
+                    taxTrading = totalPriceStock * 0.0025;
+                    taxTrading = Math.floor(taxTrading);
+                    totalAccount = totalPriceStock + feeStock + taxTrading;
+                }
             }
             else {
                 priceStock = priceStock * rateCurrency;
                 totalPriceStock = numStock * priceStock;
                 feeStock = totalPriceStock * 0.00025
                 feeStock = Math.floor(feeStock);
+                totalAccount = totalPriceStock + feeStock;
             }
 
             let temp_html = `<tr>
@@ -182,27 +219,28 @@
                             <td align=center>${taxIncome.toLocaleString()}</td>
                             <td align=center>${totalAccount.toLocaleString()}</td>
                             </tr>`
-            console.log(typeof feeStock);
+            console.log(typeof numStock);
             $('#table-trading').append(temp_html);
 
         }
 
-        function make_tableName(nameStock_selecting, temp_numStock, priceStock_avg) {
+        function make_tableName(nameStock_selecting, temp_numStock, priceStock_avg, curPrice) {
 
             let totalPriceStock = temp_numStock * priceStock_avg;
-            let pricenow = priceStock_avg - 1000;
+            let pricenow = curPrice;
             let totalPriceStock_now = temp_numStock * pricenow;
             let ROE_now = ((totalPriceStock_now - totalPriceStock) / totalPriceStock) * 100;
             let temp_html1 = `<tr>
-                <td>${nameStock_selecting}</td>
-                <td>${temp_numStock.toLocaleString()}</td>
-                <td>${priceStock_avg.toLocaleString()}</td>
-                <td>${pricenow.toLocaleString()}</td>
-                <td>${totalPriceStock.toLocaleString()}</td>
-                <td>${totalPriceStock_now.toLocaleString()}</td>
-                <td>${ROE_now.toFixed(1)}</td>
+                <td align=center>${nameStock_selecting}</td>
+                <td align=center>${temp_numStock.toLocaleString()}</td>
+                <td align=center>${priceStock_avg.toLocaleString()}</td>
+                <td align=center>${pricenow.toLocaleString()}</td>
+                <td align=center>${totalPriceStock.toLocaleString()}</td>
+                <td align=center>${totalPriceStock_now.toLocaleString()}</td>
+                <td align=center>${ROE_now.toFixed(1)}</td>
                 </tr>`
-            $('#table-mystocks').append(temp_html1)
+            $('#table-mystocks').empty();
+            $('#table-mystocks').append(temp_html1);
 
         }
         function posting() {
@@ -249,26 +287,43 @@
 
     <script>
         function load_myStock1() {
-            let nameStock = $('#input-nameStock').val();
+            let nameStock = $('#input-stockselect').val();
             $.ajax({
                 type: 'GET',
-                url: '/stock/nameStock',
-                data: { },
+                url: '/stock/nameStock?nameStock_give=' + nameStock,
+                data: {},
                 success: function (response) {
-                    response = JSON.parse(response)
                     if (response['result'] == 'success') {
-                        let mystocks1 = response['priceSelectedStock'];
-                        console.log(mystocks1);
+                        let curPrice = response['y'][response['y'].length - 1];
+                        make_tableName(nameStock_select, numStock_total, priceStock_avg, curPrice);
+
+                        chartDrowFun.chartDrow(response['x'], response['y']); //chartDrow() 실행
                     }
                 }
             });
         }
 
+        function load_myStock2() {
+            let assetAppend = 200000000;
+            //$('#input-assetAppend').val();
+            $.ajax({
+                type: 'GET',
+                url: '/stock/assetAppend',
+                data: {},
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        let myAsset = response['myAsset'];
+                        drawChart(myAsset['date'], myAsset['myAsset'], myAsset['assetSum']);
+                    }
+                }
+            });
+        }
 
         var chartDrowFun = {
 
-            chartDrow: function () {
+            chartDrow: function (x, y) {
                 var chartData = '';
+                let nameStock = $('#input-stockselect').val();
 
                 //날짜형식 변경하고 싶으시면 이 부분 수정하세요.
                 var chartDateformat = 'yyyy년MM월dd일';
@@ -283,19 +338,13 @@
                     var data = new google.visualization.DataTable();
                     //그래프에 표시할 컬럼 추가
                     data.addColumn('datetime', '날짜');
-                    data.addColumn('number', '삼성전자');
-                    data.addColumn('number', 'Google');
-                    data.addColumn('number', '카카오');
+                    data.addColumn('number', nameStock);
 
                     //그래프에 표시할 데이터
                     var dataRow = [];
 
-                    for (var i = 0; i <= 500; i++) { //랜덤 데이터 생성
-                        var total = Math.floor(Math.random() * 300) + 1;
-                        var man = Math.floor(Math.random() * total) + 1;
-                        var woman = total - man;
-
-                        dataRow = [new Date('2020', '01', i, '06'), man, woman, total];
+                    for (var i = 0; i <= x.length; i++) { //랜덤 데이터 생성
+                        dataRow = [new Date(x[i]), y[i]];
                         data.addRow(dataRow);
                     }
 
@@ -309,7 +358,7 @@
                             height: 500,
                             width: '100%',
                             legend: { position: "top", textStyle: { fontSize: 13 } },
-                            pointSize: 5,
+                            pointSize: 1,
                             tooltip: { textStyle: { fontSize: 12 }, showColorCode: true, trigger: 'both' },
                             hAxis: {
                                 format: chartDateformat, gridlines: {
@@ -372,16 +421,14 @@
                     dashboard.draw(data);
 
                 }
-                google.charts.setOnLoadCallback(drawDashboard);
+                google.charts.setOnLoadCallback(drawDashboard());
 
             }
         }
 
         $(document).ready(function () {
             google.charts.load('current', { 'packages': ['line', 'controls'] });
-            chartDrowFun.chartDrow(); //chartDrow() 실행
         });
-
 
     </script>
 
@@ -389,15 +436,16 @@
     <script type="text/javascript">
         google.charts.load('current', { 'packages': ['corechart'] });
         google.charts.setOnLoadCallback(drawChart);
+        s
+        function drawChart(x, y, z) {
+            var dataRow = [];
 
-        function drawChart() {
-            var data = google.visualization.arrayToDataTable([
-                ['Director (Year)', 'Rotten Tomatoes', 'IMDB'],
-                ['Alfred Hitchcock (1935)', 8.4, 7.9],
-                ['Ralph Thomas (1959)', 6.9, 6.5],
-                ['Don Sharp (1978)', 6.5, 6.4],
-                ['James Hawes (2008)', 4.4, 6.2]
-            ]);
+            for (var i = 0; i <= x.length; i++) { //랜덤 데이터 생성
+                dataRow = [x[i], y[i], z[i]];
+                let rawdata = data.addRow(dataRow);
+            }
+
+            var data = google.visualization.arrayToDataTable(rawdata);
 
             var options = {
                 title: 'The decline of \'The 39 Steps\'',
@@ -411,9 +459,6 @@
         }
     </script>
 
-
-
-
 </head>
 
 <body>
@@ -421,84 +466,61 @@
         <section class="hero is-warning">
             <div class="hero-body">
                 <div class="container make-center">
-                    <h1 class="title">
+                    <h1 class="title" style="color:rgb(240, 225, 14);">
                         나의 수익률 계산기
                     </h1>
-                    <h2 class="subtitle" id="regDate">
+                    <h2 class="subtitle" id="regDate" style="color:rgb(243, 230, 47);">
                         Today Date
                     </h2>
                 </div>
             </div>
         </section>
         <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">거래일자</label>
-                <div class="col-sm-6">
+        <div class="container">
+            <div class="row">
+                <label class="col">거래일자</label>
+                <div class="col">
                     <input class="form-control" type="text" id="input-dateTrading" placeholder="YYYYMMDD">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">거래종목</label>
-                <div class="col-sm-6">
+                <label class="col">거래종목</label>
+                <div class="col">
                     <input class="form-control" type="text" id="input-nameStock" placeholder="예) 삼성전자">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">매매종류</label>
-                <div class="col-sm-6">
+                <div class="w-100"></div>
+                <label class="col">매매종류</label>
+                <div class="col">
                     <input class="form-control" type="text" id="input-selectTrading" placeholder="매수/매도/배당 중 선택">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">국내/해외</label>
-                <div class="col-sm-6">
+                <label class="col">국내/해외</label>
+                <div class="col">
                     <input class="form-control" type="text" id="input-selectNation" placeholder="국내/해외 중 선택">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">환율</label>
-                <div class="col-sm-6">
+                <div class="w-100"></div>
+                <label class="col">환율</label>
+                <div class="col">
                     <input class="form-control" type="text" id="input-rateCurrency" placeholder="달러일 경우만 반영">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">주문량</label>
-                <div class="col-sm-6">
-                    <input class="form-control" type="text" id="input-numStock" placeholder="OOO">
+                <label class="col">주문량</label>
+                <div class="col">
+                    <input class="form-control" type="text" id="input-numStock" placeholder="몇주를 사셨나요?">
                 </div>
-            </div>
-        </div>
-        <br>
-        <div class="form-inline">
-            <div class="form-group form-group-sm">
-                <label class="col-sm-5 control-label" for="formGroupInputSmall">체결가</label>
-                <div class="col-sm-6">
-                    <input class="form-control" type="text" id="input-priceStock" placeholder="원 또는 달러">
+                <div class="w-100"></div>
+                <label class="col">체결가</label>
+                <div class="col">
+                    <input class="form-control" type="text" id="input-priceStock" placeholder="국내(원)/해외($)">
                 </div>
+                <div class="col">
+                    <button onclick="posting()" style="width : 200px; background-color : rgb(0, 195, 255); 
+                    height: 35px;">등록</button>
+                </div>
+                <label class="col"></label>
             </div>
         </div>
-        <button type="submit" class="btn btn-default" onclick="posting()">등록</button>
         <br>
         <br>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active" aria-current="page">매매일지</li>
+            <ol class="breadcrumb" style="background-color: darkkhaki;">
+                <li class="breadcrumb-item active" aria-current="page" style="color:blue; font-size: larger;">매매일지</li>
             </ol>
         </nav>
 
@@ -509,14 +531,14 @@
                     <th scope="col">일자</th>
                     <th scope="col">종목</th>
                     <th scope="col">주문구분</th>
-                    <th scope="col">주문량</th>
-                    <th scope="col">체결가</th>
-                    <th scope="col">환율</th>
-                    <th scope="col">주문금액</th>
-                    <th scope="col">수수료</th>
-                    <th scope="col">거래세</th>
-                    <th scope="col">소득세</th>
-                    <th scope="col">종합</th>
+                    <th scope="col">주문량(주)</th>
+                    <th scope="col">체결가(원)</th>
+                    <th scope="col">환율(원)</th>
+                    <th scope="col">주문금액(원)</th>
+                    <th scope="col">수수료(원)</th>
+                    <th scope="col">거래세(원)</th>
+                    <th scope="col">소득세(원)</th>
+                    <th scope="col">실금액(원)</th>
                 </tr>
 
             </thead>
@@ -525,30 +547,33 @@
         </table>
 
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active" aria-current="page">현재 보유 종목별 수익률</li>
+            <ol class="breadcrumb" style="background-color: darkkhaki;">
+                <li class="breadcrumb-item active" aria-current="page" style="color:blue; font-size: larger;">현재 보유 종목별
+                    수익률</li>
             </ol>
         </nav>
         <div class="form-inline">
-            <div class="form-group form-group-sm">
+            <div class="form-group form-group-sm" style="width: 400px">
                 <label class="col-sm-5 control-label" for="formGroupInputSmall">종목선택</label>
                 <div class="col-sm-6">
                     <input class="form-control" type="text" id="input-stockselect" placeholder="종목명 입력">
                 </div>
             </div>
+            <div class="form-group form-group-sm">
+                <button type="submit" class="btn btn-default" onclick="applyName()">적용</button>
+            </div>
         </div>
         <br>
-        <button type="submit" class="btn btn-default" onclick="applyName()">적용</button>
         <br>
         <table class="table">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">종목명</th>
-                    <th scope="col">보유수량</th>
-                    <th scope="col">매입가</th>
-                    <th scope="col">현재가</th>
-                    <th scope="col">투자금액</th>
-                    <th scope="col">평가금액</th>
+                    <th scope="col" center>종목명</th>
+                    <th scope="col" center>보유수량(주)</th>
+                    <th scope="col">매입가(원)</th>
+                    <th scope="col">현재가(원)</th>
+                    <th scope="col">투자금액(원)</th>
+                    <th scope="col">평가금액(원)</th>
                     <th scope="col">수익률(%)</th>
                 </tr>
 
@@ -565,11 +590,7 @@
         <div id="chart_div" style="height: 500px;"></div> -->
 
         <br>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active" aria-current="page">종목별 가격 그래프</li>
-            </ol>
-        </nav>
+
         <div id="Line_Controls_Chart">
             <!-- 라인 차트 생성할 영역 -->
             <div id="lineChartArea" style="padding:0px 20px 0px 0px;"></div>
@@ -577,13 +598,12 @@
             <div id="controlsArea" style="padding:0px 20px 0px 0px;"></div>
         </div>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active" aria-current="page">총자산 그래프</li>
+            <ol class="breadcrumb" style="background-color: darkkhaki;">
+                <li class="breadcrumb-item active" aria-current="page" style="color:blue; font-size: larger;">총자산 그래프
+                </li>
             </ol>
         </nav>
         <div id="chart_div2" style="height: 500px;"></div>
-
-
     </div>
 </body>
 
